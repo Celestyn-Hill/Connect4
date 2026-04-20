@@ -222,11 +222,7 @@ namespace connect4
             _menuPositionMax = board.board.GetLength(0)-1;
             _lastPosition = "MainMenu";
 
-            boardOptions = new string[board.board.GetLength(0)];
-            for (int i = 0; i < board.board.GetLength(0)-1; i++)
-            {
-                boardOptions[i] = i.ToString();
-            }
+            Game.resetGame();
 
             Game.gameLocation = "InGame";
         }
@@ -288,6 +284,23 @@ namespace connect4
             resetColor();
         }
 
+        // win game
+        public static void winGame(Board board, Player[] player, int winner)
+        {
+            Console.Clear();
+            _menuPositionMax = 2;
+
+            string[] winMenuText = { "Replay", "Main Menu", "Quit"};
+            string[] winMenuOption = { "PlayerGame", "MainMenu", "exit"};
+
+            Console.SetCursorPosition(_boardWidthOffset, 0);
+            
+            Console.Write($"player '{player[winner].icon}' Wins!");
+
+            
+            displayMenuOptions(winMenuText);
+            getUserInput(winMenuOption);
+        }
         //generic menu stuffs
         private static void displayMenuOptions(string[] MenuText)
         {
@@ -356,6 +369,7 @@ namespace connect4
         private static void optionSelection(string[] options, int selectedOption)
         {
             Console.Clear();
+            _menuPosition = 0;
             Game.gameLocation = options[selectedOption];
         }
 
@@ -424,6 +438,12 @@ namespace connect4
 
             checkForWin(row, storeForLater);
 
+            if (checkForWin(row, storeForLater))
+            {
+                _gameLocation = "GameWon";
+                return;
+            }
+
             _turn++;
 
             if (_turn >= players.GetLength(0))
@@ -432,6 +452,13 @@ namespace connect4
             }
 
             GUI.showTurn(_gameBoard, players[_turn]);
+        }
+
+        public static void resetGame()
+        {
+            _turn = 0;
+            _gameBoard = new Board(10,5);
+            _gameLocation = "InGame";
         }
 
         private static void manageGameState()
@@ -455,6 +482,9 @@ namespace connect4
                     GUI.showTurn(_gameBoard, players[_turn]);
                     GUI.inGame(gameBoard, players[1]);
                     break;
+                case "GameWon":
+                    GUI.winGame(_gameBoard, players, _turn);
+                    break;
                 case "Ai1":
                 case "Ai2":
                 case "Ai3":
@@ -467,14 +497,14 @@ namespace connect4
             }
         }
     
-        public static void checkForWin(int placeX, int placeY)
+        public static bool checkForWin(int placeX, int placeY)
         {
             // horizontal win checks
             if (placeX == 0)
             {
                 if (horizontalCheck(placeX, placeY, 1, 2, 3))
                 {
-                    _playingGame = false;
+                    return true;
                 }
             }
 
@@ -482,12 +512,12 @@ namespace connect4
             {
                 if (horizontalCheck(placeX, placeY, 1, 2, 3))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -1, 1, 2))
                 {
-                    _playingGame = false;
+                    return true;
                 }
             }
 
@@ -495,17 +525,17 @@ namespace connect4
             {
                 if (horizontalCheck(placeX, placeY, 1, 2, 3))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -1, 1, 2))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -2, -1, 1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
             }
 
@@ -513,22 +543,22 @@ namespace connect4
             {
                 if (horizontalCheck(placeX, placeY, 1, 2, 3))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -1, 1, 2))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -2, -1, 1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -3, -2, -1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
             }
@@ -537,7 +567,7 @@ namespace connect4
             {
                 if (horizontalCheck(placeX, placeY, -3, -2, -1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
             }
 
@@ -545,36 +575,126 @@ namespace connect4
             {
                 if (horizontalCheck(placeX, placeY, -3, -2, -1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -2, -1, 1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
-                
             }
 
             if (placeX == _gameBoard.board.GetLength(0)-3)
             {
                 if (horizontalCheck(placeX, placeY, -3, -2, -1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
 
                 if (horizontalCheck(placeX, placeY, -2, -1, 1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
                 
                 if (horizontalCheck(placeX, placeY, 2, -1, 1))
                 {
-                    _playingGame = false;
+                    return true;
                 }
             }
 
             // vertical
+            if (placeY == 0)
+            {
+                if (verticalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    return true;
+                }
+            }
+
+            if (placeY == 1)
+            {
+                if (verticalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    return true;
+                }
+
+                if (verticalCheck(placeX, placeY, -1, 1, 2))
+                {
+                    return true;
+                }
+            }
+
+            // diagonal checking to the right
+
+            if (placeX <= _gameBoard.board.GetLength(0)-4 && (placeY == 0 || placeY == 1))
+            {
+                if (diagonalCheckRight(placeX, placeY, 1, 2, 3))
+                {
+                    return true;
+                }
+            }
+
+            if ((placeX >= 3) && (placeY == _gameBoard.board.GetLength(1)-1 || placeY == _gameBoard.board.GetLength(1)-2))
+            {
+                if (diagonalCheckRight(placeX, placeY, -1, -2, -3))
+                {
+                    return true;
+                }
+            }
+
+            if (placeX <= _gameBoard.board.GetLength(0)-3 && (placeY == 1 || placeY == 2))
+            {
+                if (diagonalCheckRight(placeX, placeY, 1, -1, 2))
+                {
+                    return true;
+                }
+            }
+
+            if ((placeX >= 2) && (placeY == _gameBoard.board.GetLength(1)-2 || placeY == _gameBoard.board.GetLength(1)-3))
+            {
+                if (diagonalCheckRight(placeX, placeY, -1, -2, 1))
+                {
+                    return true;
+                }
+            }
+
+            // diagonal checking to the left
+
+            if (placeX <= _gameBoard.board.GetLength(0)-4 && (placeY == 0 || placeY == 1))
+            {
+                if (diagonalCheckLeft(placeX, placeY, 1, 2, 3))
+                {
+                    return true;
+                }
+            }
+
+            if ((placeX >= 3) && (placeY == _gameBoard.board.GetLength(1)-1 || placeY == _gameBoard.board.GetLength(1)-2))
+            {
+                if (diagonalCheckLeft(placeX, placeY, -1, -2, -3))
+                {
+                    return true;
+                }
+            }
+
+            if (placeX <= _gameBoard.board.GetLength(0)-3 && (placeY == 1 || placeY == 2))
+            {
+                if (diagonalCheckLeft(placeX, placeY, 1, -1, 2))
+                {
+                    return true;
+                }
+            }
+
+            if ((placeX >= 2) && (placeY == _gameBoard.board.GetLength(1)-2 || placeY == _gameBoard.board.GetLength(1)-3))
+            {
+                if (diagonalCheckLeft(placeX, placeY, -1, -2, 1))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
+
 
         private static bool horizontalCheck(int placeX, int placeY, int n1, int n2, int n3)
         {
@@ -589,6 +709,26 @@ namespace connect4
         private static bool verticalCheck(int placeX, int placeY, int n1, int n2, int n3)
         {
             if (_gameBoard.board[placeX,placeY+n1] == players[_turn].icon && _gameBoard.board[placeX,placeY+n2] == players[_turn].icon && _gameBoard.board[placeX,placeY+n3] == players[_turn].icon)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool diagonalCheckRight(int placeX, int placeY, int n1, int n2, int n3)
+        {
+            if (_gameBoard.board[placeX+n1,placeY+n1] == players[_turn].icon && _gameBoard.board[placeX+n2,placeY+n2] == players[_turn].icon && _gameBoard.board[placeX+n3,placeY+n3] == players[_turn].icon)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool diagonalCheckLeft(int placeX, int placeY, int n1, int n2, int n3)
+        {
+            if (_gameBoard.board[placeX-n1,placeY+n1] == players[_turn].icon && _gameBoard.board[placeX-n2,placeY+n2] == players[_turn].icon && _gameBoard.board[placeX-n3,placeY+n3] == players[_turn].icon)
             {
                 return true;
             }
