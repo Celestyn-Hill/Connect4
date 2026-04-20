@@ -194,7 +194,7 @@ namespace connect4
         public static void mainMenu()
         {
             string[] mainMenuText = { "Play VS Player", "Play VS AI", "Controls", "Quit" };
-            string[] mainMenuOptions = { "", "AiDifficulty", "Controls", "exit"};
+            string[] mainMenuOptions = { "PlayerGame", "AiDifficulty", "Controls", "exit"};
 
             _menuPositionMax = 3;
             _lastPosition = "MainMenu";
@@ -249,7 +249,14 @@ namespace connect4
         {   
             highlightBoardOption(board);
             getUserInput(boardOptions);
-        }   
+        }
+
+        public static void showTurn(Board board, Player player)
+        {
+            Console.SetCursorPosition(_boardWidthOffset, board.board.GetLength(1)+_boardHeightOffset+1);
+
+            Console.Write($"It is currently '{player.icon}' turn");
+        }
 
         private static void highlightBoardOption(Board board)
         {
@@ -391,14 +398,12 @@ namespace connect4
 
             HumanPlayer player1 = new HumanPlayer('x', ConsoleColor.Red);
             HumanPlayer player2 = new HumanPlayer('o', ConsoleColor.Blue);
-            HumanPlayer player3 = new HumanPlayer('y', ConsoleColor.Yellow);
 
-            players = new Player[3];
+            players = new Player[2];
             players[0] = player1;
             players[1] = player2;
-            players[2] = player3;
 
-            _gameLocation = "PlayerGame";
+            _gameLocation = "Controls";
 
             // GUI.displayControls();
             while (_playingGame)
@@ -414,7 +419,10 @@ namespace connect4
                 return;
             }
 
+            int storeForLater = _gameBoard.getAvialableSpace(row);
             GUI.placePlayerIcon(players[_turn], _gameBoard);
+
+            checkForWin(row, storeForLater);
 
             _turn++;
 
@@ -422,6 +430,8 @@ namespace connect4
             {
                 _turn = 0;
             }
+
+            GUI.showTurn(_gameBoard, players[_turn]);
         }
 
         private static void manageGameState()
@@ -442,6 +452,7 @@ namespace connect4
                     break;
                 case "InGame":
                     GUI.displayBoard(_gameBoard, players);
+                    GUI.showTurn(_gameBoard, players[_turn]);
                     GUI.inGame(gameBoard, players[1]);
                     break;
                 case "Ai1":
@@ -454,6 +465,135 @@ namespace connect4
                     Console.Clear();
                     break;
             }
+        }
+    
+        public static void checkForWin(int placeX, int placeY)
+        {
+            // horizontal win checks
+            if (placeX == 0)
+            {
+                if (horizontalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    _playingGame = false;
+                }
+            }
+
+            if (placeX == 1)
+            {
+                if (horizontalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -1, 1, 2))
+                {
+                    _playingGame = false;
+                }
+            }
+
+            if (placeX == 2)
+            {
+                if (horizontalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -1, 1, 2))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -2, -1, 1))
+                {
+                    _playingGame = false;
+                }
+            }
+
+            if (placeX >=3 && placeX <= _gameBoard.board.GetLength(0)-4)
+            {
+                if (horizontalCheck(placeX, placeY, 1, 2, 3))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -1, 1, 2))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -2, -1, 1))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -3, -2, -1))
+                {
+                    _playingGame = false;
+                }
+
+            }
+
+            if (placeX == _gameBoard.board.GetLength(0)-1)
+            {
+                if (horizontalCheck(placeX, placeY, -3, -2, -1))
+                {
+                    _playingGame = false;
+                }
+            }
+
+            if (placeX == _gameBoard.board.GetLength(0)-2)
+            {
+                if (horizontalCheck(placeX, placeY, -3, -2, -1))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -2, -1, 1))
+                {
+                    _playingGame = false;
+                }
+                
+            }
+
+            if (placeX == _gameBoard.board.GetLength(0)-3)
+            {
+                if (horizontalCheck(placeX, placeY, -3, -2, -1))
+                {
+                    _playingGame = false;
+                }
+
+                if (horizontalCheck(placeX, placeY, -2, -1, 1))
+                {
+                    _playingGame = false;
+                }
+                
+                if (horizontalCheck(placeX, placeY, 2, -1, 1))
+                {
+                    _playingGame = false;
+                }
+            }
+
+            // vertical
+        }
+
+        private static bool horizontalCheck(int placeX, int placeY, int n1, int n2, int n3)
+        {
+            if (_gameBoard.board[placeX+n1,placeY] == players[_turn].icon && _gameBoard.board[placeX+n2,placeY] == players[_turn].icon && _gameBoard.board[placeX+n3,placeY] == players[_turn].icon)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool verticalCheck(int placeX, int placeY, int n1, int n2, int n3)
+        {
+            if (_gameBoard.board[placeX,placeY+n1] == players[_turn].icon && _gameBoard.board[placeX,placeY+n2] == players[_turn].icon && _gameBoard.board[placeX,placeY+n3] == players[_turn].icon)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
