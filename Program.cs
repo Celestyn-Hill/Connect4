@@ -3,33 +3,56 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace connect4
 {
-    class Player
+    abstract class Player
     {
         char _icon;
         ConsoleColor _color;
-        bool _isAi;
-        int _AiDifficulty;
         public char icon { get => _icon; set => _icon = value; }
         public ConsoleColor color { get => _color; set => color = value; }
-        public bool isAi { get => _isAi; set => isAi = value; }
-	    public int AiDifficulty { get => _AiDifficulty; set => _AiDifficulty = value; }
 
 
-
-        public void playTurn(Board board)
+        public Player(char inputChar, ConsoleColor color)
         {
-            if (_isAi)
-            {
-                aiTurn(board);
-                return;
-            }
+            _icon = inputChar;
+            _color = color;
+        }
+        public virtual void playTurn(Board board)
+        {
 
+        }
+    }
+
+    class HumanPlayer : Player
+    {
+        public HumanPlayer(char inputChar, ConsoleColor color) : base(inputChar, color)
+        {
             
         }
 
-        private void aiTurn(Board board)
+        public override void playTurn(Board board)
         {
-            switch(AiDifficulty)
+            
+        }
+
+        public override string ToString()
+        {
+            return "player";
+        }
+    }
+    class AiPlayer : Player
+    {
+        int _AiDifficulty;
+
+        public AiPlayer(char inputChar, ConsoleColor color, int difficulty) : base(inputChar, color)
+        {
+            _AiDifficulty = difficulty;
+        }
+
+        public int AiDifficulty { get => _AiDifficulty; set => _AiDifficulty = value; }
+
+        public override void playTurn(Board board)
+        {
+            switch (AiDifficulty)
             {
                 //TODO create ai difficulty
                 //if you have a 3 in a row starts at 100% to block from first turn you can get connect 4 and every other turn after that reduce this number by 25% to a minimum of 50%
@@ -41,7 +64,7 @@ namespace connect4
                 //if all previous checks fail. randomly place a marker
                 case 1:
 
-                break;
+                    break;
                 //level 2 ai priority
                 //if it has a 3 in a row 75% chance to win
                 //if you have a 3 in a row starts at 100% to block from first turn you can get connect 4 and every other turn after that reduce this number by 10% to a minimum of 50%
@@ -51,7 +74,7 @@ namespace connect4
                 //if all previous checks fail. randomly place a marker
                 case 2:
 
-                break;
+                    break;
                 //level 2 ai priority
                 //if it has a 3 in a row win
                 //if you have a 3 in a row block it
@@ -62,9 +85,14 @@ namespace connect4
                 //if all previous checks fail. randomly place a marker
                 case 3:
 
-                break;
+                    break;
             }
         }
+
+        public override string ToString()
+            {
+                return "ai";
+            }
     }
     class Board
     {
@@ -74,6 +102,27 @@ namespace connect4
         public Board(int width, int height)
         {
             _board = new char[width, height];
+
+            for (int i = 0; i < _board.GetLength(0); i++)
+            {
+                for (int j = 0; j < _board.GetLength(1); j++) 
+                { 
+                    _board[i, j] = '.';
+                } 
+            }
+        }
+
+        public int getAvialableSpace(int column)
+        {
+            for (int i = _board.GetLength(1)-1; i >= 0; i--)
+            {
+                if (_board[column,i] == '.')
+                {
+                    return i;
+                }
+            }
+
+            return 0;
         }
     }
     
@@ -85,6 +134,7 @@ namespace connect4
 
         //ints for position of stuff on the menu
         private static int _menuPosition = 0;
+        public static int menuPosition { get => _menuPosition; set => _menuPosition = value; }
         private static int _menuPositionMax;
 
         //colors uesd for gui
@@ -94,11 +144,32 @@ namespace connect4
         static ConsoleColor textColor = ConsoleColor.White;
         static ConsoleColor textColorBackground = ConsoleColor.Black;
 
-        public static void displayBoard(Board board)
-        {
+        // stores last position to get back to from control menu
+        static string _lastPosition;
 
+        public static void displayBoard(Board inputBoard, Player[] players)
+        {
+            for (int i = 0; i < inputBoard.board.GetLength(0); i++)
+            {
+                for (int j = 0; j < inputBoard.board.GetLength(1); j++)
+                {
+                    Console.SetCursorPosition(i+_boardWidthOffset, j+_boardHeightOffset);
+
+                    foreach (Player check in players)
+                    {
+                        if (check.icon == inputBoard.board[i,j])
+                        {
+                            Console.ForegroundColor = check.color;
+                        }
+                    }
+                    Console.WriteLine(inputBoard.board[i,j]);
+
+                    resetColor();
+                }
+            }
         }
 
+        //display controls stuff
         public static void displayControls()
         {
             string[] tutorialControls = { "WASD: Moves the position on the menu", "E: Select highlighted option", "P: quit the game at any time", "Press any key to exit" };
@@ -109,37 +180,108 @@ namespace connect4
 
             string waitForInput = getInput();
             Console.Clear();
+
+            if (_lastPosition == null)
+            {
+                Game.gameLocation = "MainMenu";
+                return;
+            }
+
+            Game.gameLocation = _lastPosition;
         }
 
+        //main menu stuff
         public static void mainMenu()
         {
             string[] mainMenuText = { "Play VS Player", "Play VS AI", "Controls", "Quit" };
+            string[] mainMenuOptions = { "", "AiDifficulty", "Controls", "exit"};
+
             _menuPositionMax = 3;
+            _lastPosition = "MainMenu";
             displayMenuOptions(mainMenuText);
-            getUserInput();
+            getUserInput(mainMenuOptions);
         }
 
-        private static void mainMenuOptions()
+        // chose ai settings
+
+        public static void selectAiDifficulty()
         {
-            switch (_menuPosition)
-            {
-                case 0:
+            string[] AiDifficultyText = { "Easy", "Medium", "Hard", "Back" };
+            string[] AiMenuOptions = { "Ai1", "Ai2", "Ai3", "MainMenu"};
 
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    displayControls();
-                    break;
-                case 3:
-                    Game.gameLocation = "exit";
-                    break;
-                default:
-
-                    break;
-            }
+            _menuPositionMax = 3;
+            _lastPosition = "AiDifficulty";
+            
+            displayMenuOptions(AiDifficultyText);
+            getUserInput(AiMenuOptions);
         }
 
+        // create player game
+        public static void createPlayerGame(Board board)
+        {
+            _menuPositionMax = board.board.GetLength(0)-1;
+            _lastPosition = "MainMenu";
+
+            boardOptions = new string[board.board.GetLength(0)];
+            for (int i = 0; i < board.board.GetLength(0)-1; i++)
+            {
+                boardOptions[i] = i.ToString();
+            }
+
+            Game.gameLocation = "InGame";
+        }
+
+        //create game with ai
+        public static void createAiGame(string inputDifficulty)
+        {
+            string[] AiDifficultyText = { "Easy", "Medium", "Hard", "Back" };
+            string[] AiMenuOptions = { "Ai1", "Ai2", "Ai3", "MainMenu"};
+
+            _menuPositionMax = 3;
+            _lastPosition = "MainMenu";
+            
+            displayMenuOptions(AiDifficultyText);
+            getUserInput(AiMenuOptions);
+        }
+
+        static string[] boardOptions;
+        public static void inGame(Board board, Player player)
+        {   
+            highlightBoardOption(board);
+            getUserInput(boardOptions);
+        }   
+
+        private static void highlightBoardOption(Board board)
+        {
+            if (board.getAvialableSpace(_menuPosition) < 0)
+            {
+                Console.SetCursorPosition(0+_boardWidthOffset,_menuPosition+_boardHeightOffset);
+            }
+            else
+            {
+                Console.SetCursorPosition(_menuPosition+_boardWidthOffset, board.getAvialableSpace(_menuPosition)+_boardHeightOffset);
+            }
+
+            Console.BackgroundColor = textColor;
+            Console.ForegroundColor = textColorBackground;
+
+            Console.Write(board.board[_menuPosition,board.getAvialableSpace(_menuPosition)]);
+
+            resetColor();
+        }
+
+        public static void placePlayerIcon(Player player, Board board)
+        {
+            Console.SetCursorPosition(_menuPosition+_boardWidthOffset, board.getAvialableSpace(_menuPosition)+_boardHeightOffset);
+
+            board.board[_menuPosition, board.getAvialableSpace(_menuPosition)] = player.icon;
+            Console.ForegroundColor = player.color;
+            Console.Write(player.icon);
+
+            resetColor();
+        }
+
+        //generic menu stuffs
         private static void displayMenuOptions(string[] MenuText)
         {
             Console.BackgroundColor = textColorBackground;
@@ -160,12 +302,12 @@ namespace connect4
                 Console.ForegroundColor = textColorBackground;
                 Console.WriteLine(MenuText[_menuPosition]);
             }
-            
+
 
             resetColor();
         }
 
-        private static void getUserInput()
+        private static void getUserInput(string[] options)
         {
             string switchInput = getInput();
             createBorder();
@@ -188,7 +330,12 @@ namespace connect4
                     break;
                 //selecst what is used
                 case "e":
-                    optionSelection();
+                    if (Game.gameLocation == "InGame")
+                    {
+                        Game.doTurn(_menuPosition);
+                        break;
+                    }
+                    optionSelection(options, _menuPosition);
                     break;
                 //key far away from main game to exit said game -- mainly for debugging
                 case "p":
@@ -199,14 +346,10 @@ namespace connect4
             }
         }
 
-        private static void optionSelection()
+        private static void optionSelection(string[] options, int selectedOption)
         {
-            switch (Game.gameLocation)
-            {
-                case "MainMenu":
-                    mainMenuOptions();
-                    break;
-            }
+            Console.Clear();
+            Game.gameLocation = options[selectedOption];
         }
 
 
@@ -230,27 +373,54 @@ namespace connect4
     }
     class Game
     {
-        static string _gameLocation = "MainMenu";
+        static string _gameLocation = "Controls";
         static bool _playingGame = true;
+        static int _turn = 0;
         public static string gameLocation { get => _gameLocation; set => _gameLocation = value; }
 
         //player variables
-        static Player player1;
-        static Player player2;
+        static Player[] players;
 
         //game settings variables
-        static Board _gameBoard;
+        static Board _gameBoard = new Board(10,5);
         public static Board gameBoard { get => _gameBoard; set => _gameBoard = value; }
         public static void Main(string[] args)
         {
             Console.Clear();
             Console.CursorVisible = false;
 
-            GUI.displayControls();
+            HumanPlayer player1 = new HumanPlayer('x', ConsoleColor.Red);
+            HumanPlayer player2 = new HumanPlayer('o', ConsoleColor.Blue);
+            HumanPlayer player3 = new HumanPlayer('y', ConsoleColor.Yellow);
 
+            players = new Player[3];
+            players[0] = player1;
+            players[1] = player2;
+            players[2] = player3;
+
+            _gameLocation = "PlayerGame";
+
+            // GUI.displayControls();
             while (_playingGame)
             {
                 manageGameState();
+            }
+        }
+
+        public static void doTurn(int row)
+        {
+            if (_gameBoard.board[row, _gameBoard.getAvialableSpace(row)] != '.')
+            {
+                return;
+            }
+
+            GUI.placePlayerIcon(players[_turn], _gameBoard);
+
+            _turn++;
+
+            if (_turn >= players.GetLength(0))
+            {
+                _turn = 0;
             }
         }
 
@@ -261,22 +431,29 @@ namespace connect4
                 case "MainMenu":
                     GUI.mainMenu();
                     break;
+                case "Controls":
+                    GUI.displayControls();
+                    break;
+                case "AiDifficulty":
+                    GUI.selectAiDifficulty();
+                    break;
+                case "PlayerGame":
+                    GUI.createPlayerGame(_gameBoard);
+                    break;
+                case "InGame":
+                    GUI.displayBoard(_gameBoard, players);
+                    GUI.inGame(gameBoard, players[1]);
+                    break;
+                case "Ai1":
+                case "Ai2":
+                case "Ai3":
+                    GUI.createAiGame(_gameLocation);
+                    break;
                 default:
                     _playingGame = false;
+                    Console.Clear();
                     break;
             }
-        }
-
-        public static void newGame(bool vsAi)
-        {
-            player1 = new Player();
-            player2 = new Player();
-
-            if (vsAi)
-            {
-                player2.isAi = true;
-            }
-
         }
     }
 }
