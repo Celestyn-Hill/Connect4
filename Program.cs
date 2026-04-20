@@ -295,7 +295,15 @@ namespace connect4
 
             Console.SetCursorPosition(_boardWidthOffset, 0);
             
-            Console.Write($"player '{player[winner].icon}' Wins!");
+            if (winner == -1)
+            {
+                Console.Write($"Game is a Tie!");
+            }
+            else
+            {
+                Console.Write($"player '{player[winner].icon}' Wins!");
+            }
+            
 
             
             displayMenuOptions(winMenuText);
@@ -373,6 +381,11 @@ namespace connect4
             Game.gameLocation = options[selectedOption];
         }
 
+        public static void resetMenuPos()
+        {
+            menuPosition = 0;
+        }
+
 
         //gets the input the user did and returns its value
         private static string getInput()
@@ -436,11 +449,17 @@ namespace connect4
             int storeForLater = _gameBoard.getAvialableSpace(row);
             GUI.placePlayerIcon(players[_turn], _gameBoard);
 
-            checkForWin(row, storeForLater);
+            // if (checkForWin(row, storeForLater))
+            // {
+            //     _gameLocation = "GameWon";
+            //     GUI.resetMenuPos();
+            //     return;
+            // }
 
-            if (checkForWin(row, storeForLater))
+            if (checkForTie())
             {
-                _gameLocation = "GameWon";
+                _gameLocation = "GameTie";
+                GUI.resetMenuPos();
                 return;
             }
 
@@ -484,6 +503,9 @@ namespace connect4
                     break;
                 case "GameWon":
                     GUI.winGame(_gameBoard, players, _turn);
+                    break;
+                case "GameTie":
+                    GUI.winGame(_gameBoard, players, -1);
                     break;
                 case "Ai1":
                 case "Ai2":
@@ -642,7 +664,7 @@ namespace connect4
                 }
             }
 
-            if (placeX <= _gameBoard.board.GetLength(0)-3 && (placeY == 1 || placeY == 2))
+            if (placeX <= _gameBoard.board.GetLength(0)-3 && placeX != 0 && (placeY == 1 || placeY == 2))
             {
                 if (diagonalCheckRight(placeX, placeY, 1, -1, 2))
                 {
@@ -660,7 +682,7 @@ namespace connect4
 
             // diagonal checking to the left
 
-            if (placeX <= _gameBoard.board.GetLength(0)-4 && (placeY == 0 || placeY == 1))
+            if (placeX <= _gameBoard.board.GetLength(0)-4 && placeX >= 3 && (placeY == 0 || placeY == 1))
             {
                 if (diagonalCheckLeft(placeX, placeY, 1, 2, 3))
                 {
@@ -668,7 +690,7 @@ namespace connect4
                 }
             }
 
-            if ((placeX >= 3) && (placeY == _gameBoard.board.GetLength(1)-1 || placeY == _gameBoard.board.GetLength(1)-2))
+            if (placeX >= 3 && placeX != _gameBoard.board.GetLength(0)-2 && (placeY == _gameBoard.board.GetLength(1)-1 || placeY == _gameBoard.board.GetLength(1)-2))
             {
                 if (diagonalCheckLeft(placeX, placeY, -1, -2, -3))
                 {
@@ -676,7 +698,7 @@ namespace connect4
                 }
             }
 
-            if (placeX <= _gameBoard.board.GetLength(0)-3 && (placeY == 1 || placeY == 2))
+            if (placeX <= _gameBoard.board.GetLength(0)-3 && placeX != 0 && (placeY == 1 || placeY == 2))
             {
                 if (diagonalCheckLeft(placeX, placeY, 1, -1, 2))
                 {
@@ -684,7 +706,7 @@ namespace connect4
                 }
             }
 
-            if ((placeX >= 2) && (placeY == _gameBoard.board.GetLength(1)-2 || placeY == _gameBoard.board.GetLength(1)-3))
+            if ((placeX >= 2) && placeX <= _gameBoard.board.GetLength(0)-3 && (placeY == _gameBoard.board.GetLength(1)-2 || placeY == _gameBoard.board.GetLength(1)-3))
             {
                 if (diagonalCheckLeft(placeX, placeY, -1, -2, 1))
                 {
@@ -734,6 +756,19 @@ namespace connect4
             }
 
             return false;
+        }
+
+        private static bool checkForTie()
+        {
+            for (int i = 0; i < _gameBoard.board.GetLength(0); i++)
+            {
+                if (_gameBoard.board[i,0] == '.')
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
