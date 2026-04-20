@@ -449,12 +449,12 @@ namespace connect4
             int storeForLater = _gameBoard.getAvialableSpace(row);
             GUI.placePlayerIcon(players[_turn], _gameBoard);
 
-            // if (checkForWin(row, storeForLater))
-            // {
-            //     _gameLocation = "GameWon";
-            //     GUI.resetMenuPos();
-            //     return;
-            // }
+            if (checkForWin(row, storeForLater))
+            {
+                _gameLocation = "GameWon";
+                GUI.resetMenuPos();
+                return;
+            }
 
             if (checkForTie())
             {
